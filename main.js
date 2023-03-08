@@ -27,27 +27,31 @@ let liTag;
 //     itemList.appendChild(li);
 // }
 
-//-------Display the data from server to UI
-//axios
-window.addEventListener('DOMContentLoaded',()=>{
-    axios.get("https://crudcrud.com/api/b946afa94cb74e5c87b5baf5d7ad470e/appointment")
-    .then((response)=>{
-        response.data.forEach((ele)=>{
-            showNewUserOnscreen(ele);
-            console.log(ele.name);
-        })
+//-------Display the data from server to UI after each time refresh screen
+//axios.get request to gitting data from crudcrud to UI.
+function update() {
+    window.addEventListener('DOMContentLoaded', () => {
+        axios.get("https://crudcrud.com/api/3b45e45b3d784b90b552f302cb94f437/appointment")
+            .then((response) => {
+                response.data.forEach((ele) => {
+                    showNewUserOnscreen(ele);
+                    console.log(ele.name);
+                })
+            })
+            .catch((err) => {
+                console.log(err);
+            })
     })
-    .catch((err) => {
-        console.log(err);
-    })
-})
+}
+update();
+
+
+
 
 
 
 //form submit event:
 form.addEventListener('submit', addItem);
-
-
 
 
 function addItem(e) {
@@ -58,23 +62,39 @@ function addItem(e) {
         return alert("field is empty?");
     }
 
-    liTag = itemList.querySelectorAll('li');
-    console.log(liTag);
+    //when same details has entered then not be displayed.
+    function updateList() {
+        liTag = itemList.querySelectorAll('li');
+        console.log(liTag);
 
-    Array.from(liTag).forEach(function (item) {
-        let itemEmail = item.childNodes[2].textContent;
-        if ((itemEmail.indexOf(email) != -1)) {
-            item.style.display = 'none';
-        }
-    })
+        Array.from(liTag).forEach(function (item) {
+            let itemEmail = item.childNodes[2].textContent;
+            if ((itemEmail.indexOf(email) != -1)) {
+                item.style.display = 'none';
+            }
+        })
+    }
+
 
     let obj = {
         name,
         email
     };
 
+    axios.get("https://crudcrud.com/api/3b45e45b3d784b90b552f302cb94f437/appointment")
+        .then((response) => {
+            response.data.forEach((ele) => {
+                if (ele.email == email) {
+                    updateList();
+                    axios.delete('https://crudcrud.com/api/3b45e45b3d784b90b552f302cb94f437/appointment/' + `${ele._id}`)
+                }
+            })
+        })
+        .catch((err) => {
+            console.log(err);
+        })
 
-    axios.post("https://crudcrud.com/api/b946afa94cb74e5c87b5baf5d7ad470e/appointment", obj)
+    axios.post("https://crudcrud.com/api/3b45e45b3d784b90b552f302cb94f437/appointment", obj)
         .then((responce) => {
             showNewUserOnscreen(responce.data);
             console.log(responce.data);
@@ -83,11 +103,9 @@ function addItem(e) {
             console.log(err);
         })
 
-
     // localStorage.setItem(`${obj.email}`, JSON.stringify(obj));
 
     // showNewUserOnscreen(obj);
-    // creating of list of user.
 
 }
 
@@ -103,18 +121,20 @@ function removeItem(e) {
             li = e.target.parentElement;
 
             let key = li.childNodes[2].textContent;
-            key = JSON.stringify(key);
             // console.log(key);
-            localStorage.removeItem(JSON.parse(key));
 
             itemList.removeChild(li);
+
+            axios.get("https://crudcrud.com/api/3b45e45b3d784b90b552f302cb94f437/appointment")
+                .then((response) => {
+                    response.data.forEach((ele) => {
+                        if (ele.email == key) {
+                            axios.delete('https://crudcrud.com/api/3b45e45b3d784b90b552f302cb94f437/appointment/' + `${ele._id}`)
+                        }
+                    })
+                }).catch((err) => console.log(err));
         }
     }
-
-
-
-
-
 
 }
 
@@ -146,7 +166,7 @@ function showNewUserOnscreen(obj) {
 itemList.addEventListener('click', editItam);
 
 function editItam(e) {
-    console.log(1);
+    // console.log(1);
     li = e.target.parentElement;
     let nameVal = li.childNodes[0].textContent;
     let emailVal = li.childNodes[2].textContent;
@@ -157,10 +177,7 @@ function editItam(e) {
 
     name.value = nameVal;
     email.value = emailVal;
-
 }
-
-
 
 
 
